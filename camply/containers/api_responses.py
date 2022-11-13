@@ -47,6 +47,29 @@ class CampsiteResponse(CamplyModel):
     PERMITTEDEQUIPMENT: List[_CampsiteEquipment]
     ATTRIBUTES: List[_CampsiteAttribute]
 
+    def __str__(self) -> str:
+        return f"{self.CampsiteName} (#{self.CampsiteID})"
+
+
+class TourResponse(CamplyModel):
+    """
+    https://ridb.recreation.gov/api/v1/tours/<TOUR ID>
+    """
+
+    TourID: int
+    FacilityID: int
+    TourName: str
+    TourType: str
+    TourDuration: int
+    TourDescription: str
+    TourAccessible: bool
+    CreatedDate: datetime.date
+    LastUpdatedDate: datetime.date
+    ATTRIBUTES: List[_CampsiteAttribute]
+
+    def __str__(self) -> str:
+        return f"{self.TourName} (#{self.TourID})"
+
 
 class UnawareDatetime(datetime.datetime):
     """

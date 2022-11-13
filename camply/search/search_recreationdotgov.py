@@ -12,7 +12,7 @@ import pandas as pd
 from camply.config import RecreationBookingConfig
 from camply.config.search_config import EquipmentConfig, EquipmentOptions
 from camply.containers import AvailableCampsite, CampgroundFacility, SearchWindow
-from camply.providers import RecreationDotGov
+from camply.providers import RecreationDotGov, RecreationDotGovTicket, RecreationDotGovTimedEntry
 from camply.search.base_search import BaseCampingSearch, SearchError
 from camply.utils import make_list
 
@@ -23,6 +23,7 @@ class SearchRecreationDotGov(BaseCampingSearch):
     """
     Camping Search Object
     """
+    provider_class = RecreationDotGov
 
     def __init__(
         self,
@@ -72,7 +73,7 @@ class SearchRecreationDotGov(BaseCampingSearch):
         """
         self.campsite_finder: RecreationDotGov
         super(SearchRecreationDotGov, self).__init__(
-            provider=RecreationDotGov(),
+            provider=self.provider_class(),
             search_window=search_window,
             weekends_only=weekends_only,
             nights=nights,
@@ -315,3 +316,11 @@ class SearchRecreationDotGov(BaseCampingSearch):
             campsites["campsite_id"].isin(matching_ids)
         ].copy()
         return original_campsites
+
+
+class SearchRecreationDotGovTicket(SearchRecreationDotGov):
+    provider_class = RecreationDotGovTicket
+
+
+class SearchRecreationDotGovTimedEntry(SearchRecreationDotGov):
+    provider_class = RecreationDotGovTimedEntry

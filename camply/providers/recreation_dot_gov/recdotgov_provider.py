@@ -26,13 +26,13 @@ from camply.config import (
 from camply.containers import AvailableCampsite, CampgroundFacility, RecreationArea
 from camply.containers.api_responses import (
     CampsiteAvailabilityResponse,
-    CampsiteResponse,
     FacilityResponse,
     GenericResponse,
     RecDotGovCampsite,
     RecDotGovCampsiteResponse,
     RecreationAreaResponse,
 )
+from camply.containers.base_container import CamplyModel
 from camply.providers.base_provider import BaseProvider, ProviderSearchError
 from camply.utils import api_utils, logging_utils
 from camply.utils.logging_utils import log_sorted_response
@@ -40,10 +40,11 @@ from camply.utils.logging_utils import log_sorted_response
 logger = logging.getLogger(__name__)
 
 
-class RecreationDotGov(BaseProvider):
+class RecreationDotGovBase(BaseProvider):
     """
     Python Class for Working with Recreation.gov API / NPS APIs
     """
+    activity_name = None
 
     def __init__(self, api_key: str = None):
         """
@@ -163,6 +164,8 @@ class RecreationDotGov(BaseProvider):
                 raise RuntimeError(
                     "You must provide a search query or state to find campsites"
                 )
+            if self.activity_name:
+                kwargs["activity"] = self.activity_name
             facilities = self._find_facilities_from_search(
                 search=search_string, **kwargs
             )
@@ -252,7 +255,7 @@ class RecreationDotGov(BaseProvider):
         """
         facilities_response = self._ridb_get_paginate(
             path=RIDBConfig.FACILITIES_API_PATH,
-            params=dict(query=search, activity="CAMPING", full="true", **kwargs),
+            params=dict(query=search, full="true", **kwargs),
         )
         filtered_responses = self._filter_facilities_responses(
             responses=facilities_response
@@ -401,8 +404,7 @@ class RecreationDotGov(BaseProvider):
                 raise ProviderSearchError("Invalid Campground Facility Returned")
             if all(
                 [
-                    facility.FacilityTypeDescription
-                    == RIDBConfig.CAMPGROUND_FACILITY_FIELD_QUALIFIER,
+                    facility.FacilityTypeDescription == cls.facility_type,
                     facility.Enabled is True,
                     facility.Reservable is True,
                 ]
@@ -791,7 +793,7 @@ class RecreationDotGov(BaseProvider):
         )
         return total_campsite_availability
 
-    def get_campsite_by_id(self, campsite_id: int) -> CampsiteResponse:
+    def get_campsite_by_id(self, campsite_id: int) -> CamplyModel:
         """
         Get a Campsite's Details
 
@@ -801,18 +803,18 @@ class RecreationDotGov(BaseProvider):
 
         Returns
         -------
-        CampsiteResponse
+        CamplyModel
         """
-        data = self.get_ridb_data(path=f"{RIDBConfig.CAMPSITE_API_PATH}/{campsite_id}")
+        data = self.get_ridb_data(path=f"{self.resource_api_path}/{campsite_id}")
         try:
-            response = CampsiteResponse(**data[0])
+            response = self.api_response_class(**data[0])
         except IndexError:
             raise ProviderSearchError(f"Campsite with ID #{campsite_id} not found.")
         return response
 
     def get_campground_ids_by_campsites(
         self, campsite_ids: List[int]
-    ) -> Tuple[List[int], List[CampsiteResponse]]:
+    ) -> Tuple[List[int], List[CamplyModel]]:
         """
         Retrieve a list of FacilityIDs, and Facilities from a Campsite ID List
 
@@ -823,7 +825,7 @@ class RecreationDotGov(BaseProvider):
 
         Returns
         -------
-        Tuple[List[int], List[CampsiteResponse]]
+        Tuple[List[int], List[CamplyModel]]
         """
         campground_ids = list()
         campgrounds = list()
@@ -858,8 +860,7 @@ class RecreationDotGov(BaseProvider):
             facilities.append(facility)
             logger.info(
                 "Searching Specific Campsite: ⛺️ "
-                f"{campsite.CampsiteName} (#{campsite.CampsiteID}) - "
-                f"{facility.facility_name}, {facility.recreation_area}"
+                f"{campsite} - {facility.facility_name}, {facility.recreation_area}"
             )
         return facilities
 
