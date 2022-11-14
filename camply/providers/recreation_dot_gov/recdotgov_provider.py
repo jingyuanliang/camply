@@ -499,7 +499,7 @@ class RecreationDotGovBase(BaseProvider):
         base_url = api_utils.generate_url(
             scheme=RecreationBookingConfig.API_SCHEME,
             netloc=RecreationBookingConfig.API_NET_LOC,
-            path=RecreationBookingConfig.API_BASE_PATH,
+            path=cls.api_base_path,
         )
         endpoint_url = parse.urljoin(base_url, path)
         return endpoint_url
@@ -705,7 +705,7 @@ class RecreationDotGovBase(BaseProvider):
             all_campsites += self.paginate_recdotgov_campsites(facility_id=facility_id)
         all_campsite_df = pd.DataFrame(
             [item.dict() for item in all_campsites],
-            columns=RecDotGovCampsite.__fields__,
+            columns=self.api_search_result_class.__fields__,
         )
-        all_campsite_df.set_index("campsite_id", inplace=True)
+        all_campsite_df.set_index(self.api_search_result_key, inplace=True)
         return all_campsite_df

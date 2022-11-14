@@ -23,6 +23,7 @@ from camply.containers.api_responses import (
     RecDotGovCampsiteResponse,
     RecreationAreaResponse,
 )
+from camply.containers.base_container import CamplyModel
 from camply.providers.recreation_dot_gov.recdotgov_provider import RecreationDotGovBase
 from camply.utils import api_utils, logging_utils
 
@@ -34,10 +35,13 @@ class RecreationDotGov(RecreationDotGovBase):
     resource_api_path = RIDBConfig.CAMPSITE_API_PATH
     activity_name = "CAMPING"
     api_response_class = CampsiteResponse
+    api_base_path = RecreationBookingConfig.API_BASE_PATH
+    api_search_result_class = RecDotGovCampsite
+    api_search_result_key = "campsite_id"
 
     def paginate_recdotgov_campsites(
         self, facility_id: int, equipment: Optional[List[str]] = None
-    ) -> List[RecDotGovCampsite]:
+    ) -> List[CamplyModel]:
         """
         Paginate through the RecDotGov Campsite Metadata
         """
