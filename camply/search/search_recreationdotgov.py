@@ -14,7 +14,7 @@ from camply.config.search_config import EquipmentConfig, EquipmentOptions
 from camply.containers import AvailableCampsite, CampgroundFacility, SearchWindow
 from camply.providers import RecreationDotGov, RecreationDotGovTicket, RecreationDotGovTimedEntry
 from camply.search.base_search import BaseCampingSearch, SearchError
-from camply.utils import make_list
+from camply.utils import make_list, logging_utils
 
 logger = logging.getLogger(__name__)
 
@@ -246,6 +246,11 @@ class SearchRecreationDotGov(BaseCampingSearch):
                     facility_id=campground.facility_id,
                     month=month,
                     campsite_metadata=self.campsite_metadata,
+                )
+                logger.info(
+                    f"\t{logging_utils.get_emoji(campsites)}\t"
+                    f"{len(campsites)} total sites found in month of "
+                    f"{month.strftime('%B')}"
                 )
                 if self.campsites not in [None, []]:
                     campsites = [
